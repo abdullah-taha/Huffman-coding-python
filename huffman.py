@@ -74,7 +74,17 @@ class Huffman_tree:
 		#print(self.encoded[x])
 		return self.encoded[x]
 
-
+	def decode(self, encoded_data):
+		temp = ""
+		decoded_text = ""
+		for i in encoded_data:
+			temp += i
+			if(temp in self.encoded.values()):
+				for char, code in self.encoded.items():
+					if(code == temp):
+						decoded_text += char
+						temp = ""
+		return decoded_text
 
 
 
@@ -134,11 +144,25 @@ compressed_file.close()
 
 
 read_file = open("compressed_text","rb")
-text = ""
+data_coded = ""
 data = read_file.read(1)
 while(data != b""):
-	print(int.from_bytes(data,"big"))
+	data_int = int.from_bytes(data,"big") 
+	print(f"data int : {data_int}")
+	mask = 128
+	for i in range(8):
+		if((data_int & mask) == 0):
+			data_coded += '0'
+			print(f"{i}th bit is zero")
+		else:
+			data_coded += '1'
+			print(f"{i}th bit is one")
+		mask = mask >> 1
+	print(data_coded)
 	data = read_file.read(1)
+
+decoded_text = huffman.decode(data_coded)
+print(decoded_text)
 
 
 

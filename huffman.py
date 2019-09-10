@@ -1,3 +1,4 @@
+import sys
 
 class Huffman_Node:
 	def __init__(self,data,freq):
@@ -10,18 +11,32 @@ class Huffman_Node:
 		return self.freq < other.freq	
 
 class Huffman_tree:
-	def __init__(self,freq):
+
+	### Huffman tree constructor: 
+	# 	takes a text string as input, invoke the convert2freq function
+	# 	to convert the text into a {character:number_of_occurances} dictionary
+	#	uses the dictionary to build the huffman tree by invoking build_huffman method
+	# inputs: 
+	# 	text : a string to encode it's characters and build a huffman encoding tree  
+	def __init__(self,text):
+		freq = Huffman_tree.__convert2freq(text)
 		self.tree = self.__build_huffman(freq)
 		self.root = None
 		self.encoded = {}
 
+	### build_huffman function:
+	# 	takes a frequancy dictionary as input and construct a list of huffman nodes to represent the tree. Then builds the tree by taking the tow
+	# 	minimum nodes in the list, merging them into one node and append it back to the list. the result node's frequancy is the sum of the tow nodes.
+	#  	at the end, the "tree" list will only contain the root of the tree, with it's frequancy as the sum of all characters frequancies.
+	# inputs:
+	# 	freq: a {character : number_of_frequancy} dictionary 
 	def __build_huffman(self,freq):
 		tree = [ Huffman_Node(i,freq[i]) for i in freq.keys() ]
 		
 		while(len(tree) > 1):
-			m1, m2 = Huffman_tree.minimum_tow(tree)
-			print(m1.char, m2.char)
-			m3 = Huffman_tree.merge(m1,m2)
+			m1, m2 = Huffman_tree.__minimum_tow(tree)
+			#print(m1.char, m2.char)
+			m3 = Huffman_tree.__merge(m1,m2)
 			m3.right = m1
 			m3.left = m2
 			tree.remove(m1)
@@ -30,9 +45,15 @@ class Huffman_tree:
 			self.root = m3
 		return tree
 
+	### print_tree function :
+	# 	a method to print the huffman tree, invokes the private recursive print_tree function by passing the root of the tree
+	#  	to traverse the tree from root to leafs
 	def print_tree(self):
 		self.__print_tree(self.tree[0],"")
 
+	### __print_tree function:
+	# 	a recursive function printing the character and its encoding by traversing the tree in an in-order matter, putting '1' each time we go left
+	# 	and '0' each time we go right
 	def __print_tree(self,root,result):
 		 if(root.right == None and root.left == None):
 		 	self.encoded[root.char] = result
@@ -43,15 +64,22 @@ class Huffman_tree:
 		 self.__print_tree(root.left, result + "1")
 		 self.__print_tree(root.right, result + "0" )	
 
+	### merge functioj :
+	#	a private function to merge tow huffman nodes into one node holding the sum of their frequancy
+	# inputs:
+	# 	m1, m2 : a huffman node
 	@staticmethod
-	def merge(m1,m2):
+	def __merge(m1,m2):
 		return Huffman_Node('Node',m1.freq+m2.freq)
 	
-
+	### mimimum_tow function:
+	#	a private function to find and return the tow mimimum objects out of a huffman_node object list by comparing nodes frequancies
+	# inputs: 
+	# 	liste : a Huffman_node object list
 	@staticmethod
-	def minimum_tow(liste):
-		minimum2 = Huffman_Node(None,1000)
-		minimum1 = Huffman_Node(None,1000)
+	def __minimum_tow(liste):
+		minimum2 = Huffman_Node(None,sys.maxsize)
+		minimum1 = Huffman_Node(None,sys.maxsize)
 		for i in range(len(liste)):
 				if(liste[i].freq < minimum1.freq ):
 					minimum2 = minimum1
@@ -60,20 +88,38 @@ class Huffman_tree:
 					minimum2 = liste[i]
 
 		return minimum1,minimum2
-		
 	
+	### convert2freq function:
+	# 	a private function to turn a string of characters into a {character : number of frequancy} dictionary
+	# 	for example : convert2freq("hellooo") ---> {'h': 1, 'e': 1, 'l': 2, 'o': 3}
+	@staticmethod	
+	def __convert2freq(text):
+		freq = {}
+		for i in text:
+			if i not in freq.keys():
+				freq[i] = 1
+			else:
+				freq[i] += 1
+		return freq
+
+	### compress function:
+	# 	takes a string as input, encode it by invoking the encode function, and return the encoded string   
 	def compress(self,text):
 		result = ""
 		for i in text:
 			encoded = self.encode(i)
 			result += encoded
-		print(result)
+		#print(f"compress result :{result}")
 		return result
 
+	### encode function :
+	# 	takes a character and return the corresponding encoding 
 	def encode(self,x):
 		#print(self.encoded[x])
 		return self.encoded[x]
 
+	### decode function :
+	# 	takes a string of encoded string, decodes it, and return the decoded string
 	def decode(self, encoded_data):
 		temp = ""
 		decoded_text = ""
@@ -89,30 +135,29 @@ class Huffman_tree:
 
 
 
-def convert2freq(text):
-	freq = {}
-	for i in text:
-		if i not in freq.keys():
-			freq[i] = 1
-		else:
-			freq[i] += 1
-	return freq
+
 
 
 f = open("text.txt", 'r')
 text = f.read().rstrip()
 #text = "hellooo"
 f.close()
-result = convert2freq(text)
-print(result)
-
-huffman = Huffman_tree(result)
-print(huffman.tree[0].freq)
+#result = Huffman_tree.convert2freq(text)
+#print(f"convert2freq result :{result}")
+	
+huffman = Huffman_tree(text)
+#print(f"huffman tree root : {huffman.tree[0].freq}")
+print("huffman tree :")
 huffman.print_tree()
+print()
 #huffman.encoded)
 compressed_text = huffman.compress(text)
 print(f"encoded = {huffman.encoded}")
-print(compressed_text)
+print(f"compress result : {compressed_text}")
+
+
+############################################################################################################
+
 buffer = 0
 count = 0
 compressed_file = open("compressed_text","wb")
@@ -122,16 +167,16 @@ for i in compressed_text:
 
 	 if(int(i) == 1):
 	 	buffer = (buffer << 1) + 1
-	 	print(f"bit is one {buffer}")
+	 	#print(f"bit is one {buffer}")
 	 else:
 	 	buffer = buffer << 1
-	 	print(f"bit is zero {buffer}")
+	 	#print(f"bit is zero {buffer}")
 
 	 if(count == 8):
 	 	compressed_file.write(bytes([buffer]))
 	 	#pickle.dump(buffer, compressed_file)
-	 	print(f"buffer dumped to file {buffer}")
-	 	print(bytes([buffer]))
+	 	#print(f"buffer dumped to file {buffer}")
+	 	#print(bytes([buffer]))
 	 	#print(f"buffer dumped to file {bytes(buffer)}")
 	 	buffer = 0
 	 	count = 0
@@ -139,7 +184,7 @@ for i in compressed_text:
 if(buffer != 0 ):
 	#pickle.dump(buffer, compressed_file)
 	compressed_file.write(bytes([buffer]))
-	print(f"buffer dumped to file {buffer}")
+	#print(f"buffer dumped to file {buffer}")
 compressed_file.close()
 
 
@@ -148,17 +193,17 @@ data_coded = ""
 data = read_file.read(1)
 while(data != b""):
 	data_int = int.from_bytes(data,"big") 
-	print(f"data int : {data_int}")
+	#print(f"data int : {data_int}")
 	mask = 128
 	for i in range(8):
 		if((data_int & mask) == 0):
 			data_coded += '0'
-			print(f"{i}th bit is zero")
+			#print(f"{i}th bit is zero")
 		else:
 			data_coded += '1'
-			print(f"{i}th bit is one")
+			#print(f"{i}th bit is one")
 		mask = mask >> 1
-	print(data_coded)
+	#print(data_coded)
 	data = read_file.read(1)
 
 decoded_text = huffman.decode(data_coded)

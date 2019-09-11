@@ -23,6 +23,7 @@ class Huffman_tree:
 		self.tree = self.__build_huffman(freq)
 		self.root = None
 		self.encoded = {}
+		self.extra_bits = 0
 
 	### build_huffman function:
 	# 	takes a frequancy dictionary as input and construct a list of huffman nodes to represent the tree. Then builds the tree by taking the tow
@@ -132,10 +133,61 @@ class Huffman_tree:
 						temp = ""
 		return decoded_text
 
+	def saveToFile(self,text,filename):
+		compressed_file = open(f"{filename}","wb")
+		buffer = 0
+		count = 0
+		for i in compressed_text:
+			#print(i)
+			 count += 1
 
+			 if(int(i) == 1):
+			 	buffer = (buffer << 1) + 1
+			 	#print(f"bit is one {buffer}")
+			 else:
+			 	buffer = buffer << 1
+			 	#print(f"bit is zero {buffer}")
 
+			 if(count == 8):
+			 	compressed_file.write(bytes([buffer]))
+			 	#pickle.dump(buffer, compressed_file)
+			 	#print(f"buffer dumped to file {buffer}")
+			 	#print(bytes([buffer]))
+			 	#print(f"buffer dumped to file {bytes(buffer)}")
+			 	buffer = 0
+			 	count = 0
 
+		if(buffer != 0 ):
+			buffer = buffer << (8-count)
+			#pickle.dump(buffer, compressed_file)
+			compressed_file.write(bytes([buffer]))
+			print(f"buffer dumped to file {buffer}")
+			self.extra_bits = 8 - count
+		compressed_file.close()
 
+	def read_from_file(self,filename):
+		read_file = open(f"{filename}","rb")
+		data_coded = ""
+		data = read_file.read(1)
+		while(data != b""):
+			data_int = int.from_bytes(data,"big") 
+			#print(f"data int : {data_int}")
+			mask = 128
+			for i in range(8):
+				if((data_int & mask) == 0):
+					data_coded += '0'
+					#print(f"{i}th bit is zero")
+				else:
+					data_coded += '1'
+					#print(f"{i}th bit is one")
+				mask = mask >> 1
+			#print(data_coded)
+			data = read_file.read(1)
+		return data_coded
+
+	def decode_from_file(self,filename):
+		data_coded = self.read_from_file(filename)
+		return self.decode(data_coded[:-huffman.extra_bits])
 
 
 f = open("text.txt", 'r')
@@ -150,64 +202,22 @@ huffman = Huffman_tree(text)
 print("huffman tree :")
 huffman.print_tree()
 print()
-#huffman.encoded)
+
 compressed_text = huffman.compress(text)
 print(f"encoded = {huffman.encoded}")
 print(f"compress result : {compressed_text}")
 
 
-############################################################################################################
 
-buffer = 0
-count = 0
-compressed_file = open("compressed_text","wb")
-for i in compressed_text:
-	#print(i)
-	 count += 1
-
-	 if(int(i) == 1):
-	 	buffer = (buffer << 1) + 1
-	 	#print(f"bit is one {buffer}")
-	 else:
-	 	buffer = buffer << 1
-	 	#print(f"bit is zero {buffer}")
-
-	 if(count == 8):
-	 	compressed_file.write(bytes([buffer]))
-	 	#pickle.dump(buffer, compressed_file)
-	 	#print(f"buffer dumped to file {buffer}")
-	 	#print(bytes([buffer]))
-	 	#print(f"buffer dumped to file {bytes(buffer)}")
-	 	buffer = 0
-	 	count = 0
-
-if(buffer != 0 ):
-	#pickle.dump(buffer, compressed_file)
-	compressed_file.write(bytes([buffer]))
-	#print(f"buffer dumped to file {buffer}")
-compressed_file.close()
+############################################################################################################	
 
 
-read_file = open("compressed_text","rb")
-data_coded = ""
-data = read_file.read(1)
-while(data != b""):
-	data_int = int.from_bytes(data,"big") 
-	#print(f"data int : {data_int}")
-	mask = 128
-	for i in range(8):
-		if((data_int & mask) == 0):
-			data_coded += '0'
-			#print(f"{i}th bit is zero")
-		else:
-			data_coded += '1'
-			#print(f"{i}th bit is one")
-		mask = mask >> 1
-	#print(data_coded)
-	data = read_file.read(1)
+huffman.saveToFile(compressed_text, "compressed_text")
 
-decoded_text = huffman.decode(data_coded)
+decoded_text = huffman.decode_from_file("compressed_text")
+
 print(decoded_text)
+
 
 
 

@@ -133,7 +133,9 @@ class Huffman_tree:
 						temp = ""
 		return decoded_text
 
-	def saveToFile(self,text,filename):
+	### save_to_file function:
+	# 	takes the huffman-compressed string and save it into a binary file with the file name provided as a parameter 
+	def save_to_file(self,text,filename):
 		compressed_file = open(f"{filename}","wb")
 		buffer = 0
 		count = 0
@@ -165,6 +167,9 @@ class Huffman_tree:
 			self.extra_bits = 8 - count
 		compressed_file.close()
 
+	###	read_from_file function:
+	# 	read the encoded stored string from a binary file
+	#   NOTE: the file must be created using this class
 	def read_from_file(self,filename):
 		read_file = open(f"{filename}","rb")
 		data_coded = ""
@@ -185,6 +190,8 @@ class Huffman_tree:
 			data = read_file.read(1)
 		return data_coded
 
+	### decode_from_file function:
+	# 	the function reads the encoded compressed string from the binary file, decode it and return the decoded original string
 	def decode_from_file(self,filename):
 		data_coded = self.read_from_file(filename)
 		return self.decode(data_coded[:-huffman.extra_bits])
@@ -207,12 +214,10 @@ compressed_text = huffman.compress(text)
 print(f"encoded = {huffman.encoded}")
 print(f"compress result : {compressed_text}")
 
-
-
 ############################################################################################################	
 
 
-huffman.saveToFile(compressed_text, "compressed_text")
+huffman.save_to_file(compressed_text, "compressed_text")
 
 decoded_text = huffman.decode_from_file("compressed_text")
 
